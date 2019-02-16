@@ -18,6 +18,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -46,6 +47,19 @@ public class MainActivity extends AppCompatActivity
         kamusFragment = new KamusFragment();
         bookmarkFragment = new BookmarkFragment();
         goToFragment(kamusFragment, true);
+
+        kamusFragment.setOnFragmentListener(new FragmentListener() {
+            @Override
+            public void onItemClick(String value) {
+                goToFragment(DetailFragment.getNewInstance(value), false);
+            }
+        });
+        bookmarkFragment.setOnFragmentListener(new FragmentListener() {
+            @Override
+            public void onItemClick(String value) {
+                goToFragment(DetailFragment.getNewInstance(value), false);
+            }
+        });
     }
 
     @Override
