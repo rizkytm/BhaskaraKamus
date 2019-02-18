@@ -9,10 +9,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.Toast;
 
 public class BookmarkFragment extends Fragment {
 
-    private String value = "Hello everyone!!!";
     private FragmentListener listener;
 
     public BookmarkFragment() {
@@ -34,12 +36,32 @@ public class BookmarkFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Button myButton = (Button)view.findViewById(R.id.myBtn);
-        myButton.setOnClickListener(new View.OnClickListener() {
+//        Button myButton = (Button)view.findViewById(R.id.myBtn);
+//        myButton.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                if (listener!=null)
+//                    listener.onItemClick(value);
+//            }
+//        });
+
+        ListView bookmarkList = (ListView) view.findViewById(R.id.bookmarkList);
+        final BookmarkAdapter adapter = new BookmarkAdapter(getActivity(),getListOfWords());
+        bookmarkList.setAdapter(adapter);
+
+        adapter.setOnItemClick(new ListItemListener() {
             @Override
-            public void onClick(View v) {
+            public void onItemClick(int position) {
                 if (listener!=null)
-                    listener.onItemClick(value);
+                    listener.onItemClick(String.valueOf(adapter.getItem(position)));
+            }
+        });
+
+        adapter.setOnItemDeleteClick(new ListItemListener() {
+            @Override
+            public void onItemClick(int position) {
+                adapter.removeItem(position);
+                adapter.notifyDataSetChanged();
             }
         });
     }
@@ -58,4 +80,14 @@ public class BookmarkFragment extends Fragment {
         this.listener = listener;
     }
 
+    String[] getListOfWords() {
+        String[] source = new String[] {
+                "a"
+                ,"ab"
+                ,"abc"
+                ,"abcd"
+                ,"abcde"
+        };
+        return source;
+    }
 }

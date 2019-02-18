@@ -9,6 +9,8 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -18,6 +20,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.EditText;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity
@@ -60,6 +63,24 @@ public class MainActivity extends AppCompatActivity
                 goToFragment(DetailFragment.getNewInstance(value), false);
             }
         });
+
+        EditText edit_search = findViewById(R.id.edit_search);
+        edit_search.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                kamusFragment.filterValue(s.toString());
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        });
     }
 
     @Override
@@ -82,6 +103,8 @@ public class MainActivity extends AppCompatActivity
         String id = Global.getState(this, "dic_type");
         if (id != null)
             onOptionsItemSelected(menu.findItem(Integer.valueOf(id)));
+        else
+            kamusFragment.resetDataSource(DB.getData(R.id.action_ind_sun));
         return true;
     }
 
@@ -95,12 +118,17 @@ public class MainActivity extends AppCompatActivity
 
         Global.saveState(this,"dic_type", String.valueOf(id));
 
+        String[] source = DB.getData(id);
+
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_ind_sun) {
+            kamusFragment.resetDataSource(source);
             menuSetting.setIcon(getDrawable(R.drawable.ic_library_books_red));
         } else if (id == R.id.action_sun_ind) {
+            kamusFragment.resetDataSource(source);
             menuSetting.setIcon(getDrawable(R.drawable.ic_library_books_green));
         } else if (id == R.id.action_sun_sun) {
+            kamusFragment.resetDataSource(source);
             menuSetting.setIcon(getDrawable(R.drawable.ic_library_books_blue));
         }
 
