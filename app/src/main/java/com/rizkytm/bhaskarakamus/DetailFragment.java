@@ -9,19 +9,29 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.widget.ImageButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class DetailFragment<onViewCreated> extends Fragment {
 
     private String value = "";
+    private TextView tvWord;
+    private ImageButton btnBookmark, btnVolume;
+    private WebView tvWordTranslate;
+    private DBHelper mDBHelper;
+    private int mDicType;
 
     public DetailFragment() {
         // Required empty public constructor
     }
 
-    public static DetailFragment getNewInstance(String value) {
+    public static DetailFragment getNewInstance(String value, DBHelper dbHelper, int dicType) {
         DetailFragment fragment = new DetailFragment();
         fragment.value = value;
+        fragment.mDBHelper = dbHelper;
+        fragment.mDicType = dicType;
         return fragment;
     }
 
@@ -40,7 +50,37 @@ public class DetailFragment<onViewCreated> extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        Toast.makeText(getContext(), this.value, Toast.LENGTH_SHORT).show();
+        tvWord = (TextView) view.findViewById(R.id.tvWord);
+        tvWordTranslate = (WebView) view.findViewById(R.id.tvWordTranslate);
+        btnBookmark = (ImageButton) view.findViewById(R.id.btnBookmark);
+        btnVolume = (ImageButton) view.findViewById(R.id.btnVolume);
+
+        final Word word = mDBHelper.getWord(value, mDicType);
+        tvWord.setText(word.key);
+        tvWordTranslate.loadDataWithBaseURL(null, word.value, "text/html", "utf-8", null);
+
+        Word bookmarkWord = mDBHelper.getWordFromBookmark(value);
+        int isMark = bookmarkWord == null ? 0 : 1;
+        btnBookmark.setTag(isMark);
+
+        int icon = bookmarkWord == null ? R.drawable.ic_bookmark_border : R.drawable.ic_bookmark;
+        btnBookmark.setImageResource(icon);
+
+        btnBookmark.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                int i = (int) btnBookmark.getTag();
+                if(i == 0){
+                    btnBookmark.setImageResource(R.drawable.ic_bookmark_black_24dp);
+                    btnBookmark.setTag(1);
+                    mDBHelper.addBookmark(word);
+                } else if (i == 1) {
+                    btnBookmark.setImageResource(R.drawable.ic_bookmark_border);
+                    btnBookmark.setTag(0);
+                    mDBHelper.removeBookmark(word);
+                }
+            }
+        });
     }
 
     @Override

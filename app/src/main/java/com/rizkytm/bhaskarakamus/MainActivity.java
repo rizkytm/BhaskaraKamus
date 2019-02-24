@@ -20,23 +20,33 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Toast;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
     MenuItem menuSetting;
+    Toolbar toolbar;
+
+    DBHelper dbHelper;
 
     KamusFragment kamusFragment;
     BookmarkFragment bookmarkFragment;
+
+    ArrayAdapter<String> adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        dbHelper = new DBHelper(this);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -48,21 +58,27 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         kamusFragment = new KamusFragment();
-        bookmarkFragment = new BookmarkFragment();
+        bookmarkFragment = BookmarkFragment.getNewInstance(dbHelper);
         goToFragment(kamusFragment, true);
 
         kamusFragment.setOnFragmentListener(new FragmentListener() {
             @Override
             public void onItemClick(String value) {
-                goToFragment(DetailFragment.getNewInstance(value), false);
+                String id = Global.getState(MainActivity.this, "dic_type");
+                int dicType = id == null ? R.id.action_ind_sun:Integer.valueOf(id);
+                goToFragment(DetailFragment.getNewInstance(value, dbHelper, dicType), false);
             }
         });
         bookmarkFragment.setOnFragmentListener(new FragmentListener() {
             @Override
             public void onItemClick(String value) {
-                goToFragment(DetailFragment.getNewInstance(value), false);
+                String id = Global.getState(MainActivity.this, "dic_type");
+                int dicType = id == null ? R.id.action_ind_sun:Integer.valueOf(id);
+                goToFragment(DetailFragment.getNewInstance(value, dbHelper, dicType), false);
             }
         });
+
+
 
         EditText edit_search = findViewById(R.id.edit_search);
         edit_search.addTextChangedListener(new TextWatcher() {
@@ -101,10 +117,12 @@ public class MainActivity extends AppCompatActivity
         menuSetting = menu.findItem(R.id.action_settings);
 
         String id = Global.getState(this, "dic_type");
-        if (id != null)
+        if (id != null) {
             onOptionsItemSelected(menu.findItem(Integer.valueOf(id)));
-        else
-            kamusFragment.resetDataSource(DB.getData(R.id.action_ind_sun));
+        } else {
+            ArrayList<String> source = dbHelper.getWord(R.id.action_ind_sun);
+            kamusFragment.resetDataSource(source);
+        }
         return true;
     }
 
@@ -115,10 +133,11 @@ public class MainActivity extends AppCompatActivity
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
+        if(R.id.action_settings == id) return true;
 
         Global.saveState(this,"dic_type", String.valueOf(id));
 
-        String[] source = DB.getData(id);
+        ArrayList<String> source = dbHelper.getWord(id);
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_ind_sun) {
@@ -141,7 +160,11 @@ public class MainActivity extends AppCompatActivity
         // Handle navigation view item clicks here.
         int id = item.getItemId();
         if (id == R.id.nav_bookmark) {
-            goToFragment(bookmarkFragment, false);
+            String activeFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container).getClass().getSimpleName();
+            if (!activeFragment.equals(BookmarkFragment.class.getSimpleName())) {
+                goToFragment(bookmarkFragment, false);
+            }
+
         }
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -157,5 +180,20 @@ public class MainActivity extends AppCompatActivity
         if (!isTop)
             fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        String activeFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container).getClass().getSimpleName();
+        if (activeFragment.equals(BookmarkFragment.class.getSimpleName())) {
+            menuSetting.setVisible(false);
+            toolbar.findViewById(R.id.edit_search).setVisibility(View.VISIBLE);
+            toolbar.setTitle("Bookmark");
+        } else {
+            menuSetting.setVisible(true);
+            toolbar.findViewById(R.id.edit_search).setVisibility(View.VISIBLE);
+            toolbar.setTitle("");
+        }
+        return true;
     }
 }

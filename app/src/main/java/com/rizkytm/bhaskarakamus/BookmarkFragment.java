@@ -6,6 +6,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -16,9 +18,16 @@ import android.widget.Toast;
 public class BookmarkFragment extends Fragment {
 
     private FragmentListener listener;
+    private DBHelper mDBHelper;
 
     public BookmarkFragment() {
         // Required empty public constructor
+    }
+
+    public static BookmarkFragment getNewInstance(DBHelper dbHelper) {
+        BookmarkFragment fragment = new BookmarkFragment();
+        fragment.mDBHelper = dbHelper;
+        return fragment;
     }
 
     @Override
@@ -36,17 +45,10 @@ public class BookmarkFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-//        Button myButton = (Button)view.findViewById(R.id.myBtn);
-//        myButton.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                if (listener!=null)
-//                    listener.onItemClick(value);
-//            }
-//        });
+        setHasOptionsMenu(true);
 
         ListView bookmarkList = (ListView) view.findViewById(R.id.bookmarkList);
-        final BookmarkAdapter adapter = new BookmarkAdapter(getActivity(),getListOfWords());
+        final BookmarkAdapter adapter = new BookmarkAdapter(getActivity(),mDBHelper.getAllWordFromBookmark());
         bookmarkList.setAdapter(adapter);
 
         adapter.setOnItemClick(new ListItemListener() {
@@ -80,14 +82,8 @@ public class BookmarkFragment extends Fragment {
         this.listener = listener;
     }
 
-    String[] getListOfWords() {
-        String[] source = new String[] {
-                "a"
-                ,"ab"
-                ,"abc"
-                ,"abcd"
-                ,"abcde"
-        };
-        return source;
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_clear, menu);
     }
 }
